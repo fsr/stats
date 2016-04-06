@@ -3,11 +3,23 @@ import time
 import json
 import sys
 import csv
+import requests
+from punchcard.punchcard import punchcard
+
+TEMP_DB = 'data.db'
+STATS_DB = 'https://ifsr.de/buerostatus/buerostatus.db'
+
+
+def download_db():
+    with open(TEMP_DB, 'w') as f:
+        r = requests.get(STATS_DB)
+        f.write(r.content)
 
 
 def get_raw_data():
     '''Fetches all rows from the buerostatus database'''
-    connection = sqlite3.connect('buerostatus.db')
+    download_db()
+    connection = sqlite3.connect(TEMP_DB)
     cursor = connection.cursor()
     cursor.execute("SELECT * FROM buerostatus")  # ORDER BY ts?
     rows = cursor.fetchall()
@@ -28,7 +40,7 @@ def init_data():
 
     return data
 
-
+'''
 def graph_draw(avg_data):
     all_x = []
     cnt = 0
@@ -44,12 +56,14 @@ def graph_draw(avg_data):
     plt.axis([0, 10080, 0, 1000])
     plt.savefig('test.png')
     plt.show()
+'''
 
 
 def main():
     args = sys.argv
     days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
             'Saturday', 'Sunday']
+    hours = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
     rows = get_raw_data()
 
     data = init_data()
@@ -95,11 +109,24 @@ def main():
         val_str = val_str + ',' + ','.join(vals)
         csvlist.append(val_str)
 
-    # print(csvlist)
+    plot_data = []
+    for day_id in new_avg_data:
+        # val_str = days[int(day_id)]
+        vals = []
+        for i in range(0, 24):
+            vals.append(new_avg_data[day_id][i])
+        # val_str = val_str + ',' + ','.join(vals)
+        # csvlist.append(val_str)
+        plot_data.append(vals)
+    '''
+    print(plot_data)
 
-    with open('some.csv', 'w', newline='') as f:
+    with open('some.csv', 'w') as f:
         for line in csvlist:
             f.write(line + '\n')
+    '''
+
+    punchcard('punchcard.png', plot_data, days, hours)
 
 
 if __name__ == '__main__':
