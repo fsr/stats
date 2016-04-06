@@ -63,7 +63,8 @@ def main():
     args = sys.argv
     days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
             'Saturday', 'Sunday']
-    hours = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+    hours = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+             16, 17, 18, 19, 20, 21, 22, 23]
     rows = get_raw_data()
 
     data = init_data()
@@ -75,7 +76,7 @@ def main():
     avg_data = {
         day_k: {
             hour_k: {
-                min_k: sum(min_v)/len(min_v)
+                min_k: sum(min_v) / len(min_v)
                 for min_k, min_v in hour_v.items()
             }
             for hour_k, hour_v in day_v.items()
@@ -83,23 +84,24 @@ def main():
         for day_k, day_v in data.items()
     }
 
-    with open('results.old.json', 'w') as f:
-        json.dump(avg_data, f, indent=4)
+    # with open('results.old.json', 'w') as f:
+    #     json.dump(avg_data, f, indent=4)
 
     new_avg_data = {
         day_k: {
-            hour_k: round(sum(hour_v.values())/len(hour_v.values()))
+            hour_k: round(sum(hour_v.values()) / len(hour_v.values()))
             for hour_k, hour_v in day_v.items()
         }
         for day_k, day_v in avg_data.items()
     }
 
-    with open('results.json', 'w') as f:
-        json.dump(new_avg_data, f, indent=4)
+    # with open('results.json', 'w') as f:
+    #     json.dump(new_avg_data, f, indent=4)
 
-    if len(args) > 1 and args[1] == 'draw':
-        graph_draw(avg_data)
+    # if len(args) > 1 and args[1] == 'draw':
+    #     graph_draw(avg_data)
 
+    '''
     csvlist = [',0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23']
     for day_id in new_avg_data:
         val_str = days[int(day_id)]
@@ -108,6 +110,7 @@ def main():
             vals.append(str(new_avg_data[day_id][i]))
         val_str = val_str + ',' + ','.join(vals)
         csvlist.append(val_str)
+    '''
 
     plot_data = []
     for day_id in new_avg_data:

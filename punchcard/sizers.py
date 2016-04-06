@@ -12,6 +12,7 @@ TOP = 3
 BOTTOM = 4
 CENTER = 5
 
+
 def unpack_border(border):
     try:
         l, t, r, b = border
@@ -26,11 +27,15 @@ def unpack_border(border):
     n = border
     return (n, n, n, n)
 
+
 class Target(object):
+
     def get_min_size(self):
         raise NotImplementedError
+
     def get_dimensions(self):
         raise NotImplementedError
+
     def set_dimensions(self, x, y, width, height):
         raise NotImplementedError
     x = l = left = property(lambda self: self.get_dimensions()[0])
@@ -42,70 +47,93 @@ class Target(object):
     cx = property(lambda self: self.x + self.w / 2)
     cy = property(lambda self: self.y + self.h / 2)
 
+
 class Box(Target):
+
     def __init__(self, width=0, height=0):
         self.min_size = (width, height)
         self.dimensions = (0, 0, width, height)
+
     def get_min_size(self):
         return self.min_size
+
     def get_dimensions(self):
         return self.dimensions
+
     def set_dimensions(self, x, y, width, height):
         self.dimensions = (x, y, width, height)
 
+
 class SizerItem(object):
+
     def __init__(self, target, proportion, expand, border, align):
         self.target = target
         self.proportion = proportion
         self.expand = expand
         self.border = unpack_border(border)
         self.align = align
+
     def get_min_size(self):
         l, t, r, b = self.border
         width, height = self.target.get_min_size()
         width = width + l + r
         height = height + t + b
         return (width, height)
+
     def get_dimensions(self):
         return self.target.get_dimensions()
+
     def set_dimensions(self, x, y, width, height):
         l, t, r, b = self.border
         lr, tb = l + r, t + b
         self.target.set_dimensions(x + l, y + t, width - lr, height - tb)
 
+
 class Sizer(Target):
+
     def __init__(self):
         self.items = []
         self.dimensions = (0, 0, 0, 0)
+
     def add(self, target, proportion=0, expand=False, border=0, align=NONE):
         item = SizerItem(target, proportion, expand, border, align)
         self.items.append(item)
+
     def add_spacer(self, size=0):
         spacer = Box(size, size)
         self.add(spacer)
+
     def add_stretch_spacer(self, proportion=1):
         spacer = Box()
         self.add(spacer, proportion)
+
     def get_dimensions(self):
         return self.dimensions
+
     def set_dimensions(self, x, y, width, height):
         min_width, min_height = self.get_min_size()
         width = max(min_width, width)
         height = max(min_height, height)
         self.dimensions = (x, y, width, height)
         self.layout()
+
     def fit(self):
         width, height = self.get_min_size()
         self.set_dimensions(0, 0, width, height)
+
     def get_min_size(self):
         raise NotImplementedError
+
     def layout(self):
         raise NotImplementedError
 
+
 class BoxSizer(Sizer):
+
     def __init__(self, orientation):
         super(BoxSizer, self).__init__()
         self.orientation = orientation
+
     def get_min_size(self):
         width = 0
         height = 0
@@ -118,6 +146,7 @@ class BoxSizer(Sizer):
                 width = max(width, w)
                 height += h
         return (width, height)
+
     def layout(self):
         x, y = self.x, self.y
         width, height = self.width, self.height
@@ -138,7 +167,7 @@ class BoxSizer(Sizer):
                     item.set_dimensions(x, y + offset, w, h)
                 elif item.align == BOTTOM:
                     item.set_dimensions(x, y + height - h, w, h)
-                else: # TOP
+                else:  # TOP
                     item.set_dimensions(x, y, w, h)
                 x += w
         else:
@@ -154,19 +183,25 @@ class BoxSizer(Sizer):
                     item.set_dimensions(x + offset, y, w, h)
                 elif item.align == RIGHT:
                     item.set_dimensions(x + width - w, y, w, h)
-                else: # LEFT
+                else:  # LEFT
                     item.set_dimensions(x, y, w, h)
                 y += h
 
+
 class HorizontalSizer(BoxSizer):
+
     def __init__(self):
         super(HorizontalSizer, self).__init__(HORIZONTAL)
 
+
 class VerticalSizer(BoxSizer):
+
     def __init__(self):
         super(VerticalSizer, self).__init__(VERTICAL)
 
+
 class GridSizer(Sizer):
+
     def __init__(self, rows, cols, row_spacing=0, col_spacing=0):
         super(GridSizer, self).__init__()
         self.rows = rows
@@ -175,10 +210,13 @@ class GridSizer(Sizer):
         self.col_spacing = col_spacing
         self.row_proportions = {}
         self.col_proportions = {}
+
     def set_row_proportion(self, row, proportion):
         self.row_proportions[row] = proportion
+
     def set_col_proportion(self, col, proportion):
         self.col_proportions[col] = proportion
+
     def get_rows_cols(self):
         rows, cols = self.rows, self.cols
         count = len(self.items)
@@ -187,6 +225,7 @@ class GridSizer(Sizer):
         if cols <= 0:
             cols = count / rows + int(bool(count % rows))
         return (rows, cols)
+
     def get_row_col_sizes(self):
         rows, cols = self.get_rows_cols()
         row_heights = [0] * rows
@@ -197,11 +236,13 @@ class GridSizer(Sizer):
             row_heights[row] = max(h, row_heights[row])
             col_widths[col] = max(w, col_widths[col])
         return row_heights, col_widths
+
     def get_min_size(self):
         row_heights, col_widths = self.get_row_col_sizes()
         width = sum(col_widths) + self.col_spacing * (len(col_widths) - 1)
         height = sum(row_heights) + self.row_spacing * (len(row_heights) - 1)
         return (width, height)
+
     def layout(self):
         row_spacing, col_spacing = self.row_spacing, self.col_spacing
         min_width, min_height = self.get_min_size()
@@ -230,6 +271,7 @@ class GridSizer(Sizer):
             x, y = self.x + col_x[col], self.y + row_y[row]
             w, h = col_widths[col], row_heights[row]
             item.set_dimensions(x, y, w, h)
+
 
 def main():
     a = Box(10, 10)

@@ -23,6 +23,7 @@ The tabular format CSV can then be used with punchcard.py
 
 import csv
 
+
 def process(path):
     with open(path, 'rb') as fp:
         reader = csv.reader(fp)
