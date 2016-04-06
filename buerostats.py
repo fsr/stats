@@ -2,10 +2,13 @@ import sqlite3
 import time
 import json
 import csv
+import sys
+import os
 import requests
 from punchcard.punchcard import punchcard
 
-TEMP_DB = 'data.db'
+SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
+TEMP_DB = SCRIPT_PATH + '/data.db'
 STATS_DB = 'https://ifsr.de/buerostatus/buerostatus.db'
 
 
@@ -42,7 +45,12 @@ def init_data():
     return data
 
 
-def main():
+def main(args):
+    if len(args) < 2:
+        IMGPATH = SCRIPT_PATH + '/punchcard.png'
+    else:
+        IMGPATH = args[1]
+
     # days and hours for the punchcard labels
     days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
             'Saturday', 'Sunday']
@@ -86,8 +94,9 @@ def main():
         plot_data.append(vals)
 
     # generate the punchcard
-    punchcard('punchcard.png', plot_data, days, hours)
+    punchcard(IMGPATH, plot_data, days, hours)
 
 
 if __name__ == '__main__':
-    main()
+    args = sys.argv
+    main(args)

@@ -23,13 +23,15 @@ $ pip install -r requirements.txt
 To render the punchcard correctly, the **[Exo](https://www.fontsquirrel.com/fonts/exo)** font needs to be installed on your system.
 
 
-## Rendering the image
+## Rendering the Image
 
 Render the image by running:  
 ```
-$ python buerostats.py
+$ python buerostats.py [output path]
 ```
 This will generate a **punchcard.png** file inside the repository as output.
+
+Optionally, you can define a custom output path as argument.
 
 
 ## Something fishy? Found a bug?
