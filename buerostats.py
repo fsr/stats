@@ -1,7 +1,5 @@
 import sqlite3
 import time
-import json
-import csv
 import sys
 import os
 import requests
