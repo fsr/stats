@@ -34,4 +34,4 @@ This will generate a **punchcard.png** file inside the repository as output.
 
 ## Something fishy? Found a bug?
 
-Don't hesitate to open an Issue if you found something that bothers you!
+Don't hesitate to open an [Issue](https://github.com/fsr/stats/issues) if you found something that bothers you!
