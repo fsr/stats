@@ -10,13 +10,16 @@ from punchcard.punchcard import punchcard
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 TEMP_DB = SCRIPT_PATH + '/data.db'
 STATS_DB = 'https://ifsr.de/buerostatus/buerostatus.db'
+THRESHOLD = 300.0  # light values below the threshold will be ignored
 
 
 def download_db():
     '''Downloads the latest version of the 'buerostatus' database'''
+    print('Getting the latest database data... ')
     with open(TEMP_DB, 'w') as f:
         r = requests.get(STATS_DB)
         f.write(r.content)
+    print('DONE!')
 
 
 def get_raw_data():
@@ -61,9 +64,15 @@ def main(args):
     rows = get_raw_data()
     data = init_data()
 
+    print('Calculating the average light intensity per hour... ')
+
     for row in rows:
         date = time.localtime(row[1])
-        data[date[6]][date[3]][date[4]].append(row[2])
+        # filter out every light value below the threshold (e.g. sunlight)
+        if row[2] >= THRESHOLD:
+            data[date[6]][date[3]][date[4]].append(row[2])
+        else:
+            data[date[6]][date[3]][date[4]].append(0)
 
     # calculate the average per hour light levels
     avg_per_m_data = {
@@ -93,8 +102,11 @@ def main(args):
             vals.append(avg_per_h_data[day_id][i])
         plot_data.append(vals)
 
+    print('DONE!')
+
     # generate the punchcard
     punchcard(IMGPATH, plot_data, days, hours)
+    print('Job finished. You can find the image at {}'.format(IMGPATH))
 
 
 if __name__ == '__main__':
