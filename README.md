@@ -27,11 +27,11 @@ To render the punchcard correctly, the **[Exo](https://www.fontsquirrel.com/font
 
 Render the image by running:  
 ```
-$ python buerostats.py [output path]
+$ python buerostats.py [output path] [bin size]
 ```
-This will generate a **punchcard.png** file inside the repository as output.
+This will generate a **punchcard.png** file inside the repository as output with hourly binning.
 
-Optionally, you can define a custom output path as argument.
+Optionally, you can define a custom output path as argument and a custom bin size in minutes which must be a factor of 60.
 
 
 ## Something fishy? Found a bug?

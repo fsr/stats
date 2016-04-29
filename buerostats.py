@@ -7,8 +7,10 @@ from punchcard.punchcard import punchcard
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 TEMP_DB = SCRIPT_PATH + '/data.db'
+DEFAULT_FILENAME = SCRIPT_PATH + '/punchcard.png'
 STATS_DB = 'https://ifsr.de/buerostatus/buerostatus.db'
 THRESHOLD = 300.0  # light values below the threshold will be ignored
+DEFAULT_BINSIZE = 60 # minutes per column, must be factor of 60
 
 
 def download_db():
@@ -32,7 +34,7 @@ def get_raw_data():
     return rows
 
 
-def init_data():
+def init_data(binsize):
     '''Initializes a raw data field which is going to be populated with
     data from the database'''
     data = {}
@@ -40,43 +42,68 @@ def init_data():
         data[w_day] = {}
         for hour in range(0, 24):
             data[w_day][hour] = {}
-            for minute in range(0, 60):
+            for minute in range(0, 60/binsize):
                 data[w_day][hour][minute] = []
 
     return data
 
+def bin_by_minutes(value, minutes):
+    return int(value/minutes)
 
 def main(args):
     if len(args) < 2:
-        IMGPATH = SCRIPT_PATH + '/punchcard.png'
+        IMGPATH = DEFAULT_FILENAME
+        BINSIZE = DEFAULT_BINSIZE
+    elif len(args) < 3:
+        # both argument are optional - check if only argument is a number
+        if(args[1].isdigit()):
+            IMGPATH = DEFAULT_FILENAME
+            BINSIZE = int(args[1])
+        else:
+            IMGPATH = args[1]
+            BINSIZE = DEFAULT_BINSIZE
     else:
-        IMGPATH = args[1]
+        # handle switched arguments
+        if(args[1].isdigit() and not args[2].isdigit()):
+            IMGPATH = args[2]
+            BINSIZE = int(args[1])
+        else:
+            IMGPATH = args[1]
+            BINSIZE = int(args[2])
 
-    # days and hours for the punchcard labels
+    if(60 % BINSIZE != 0):
+        print('Bin size must be factor of 60.')
+        quit()
+
+    # days and hours:minutes for the punchcard labels
     days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
             'Saturday', 'Sunday']
-    hours = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-             16, 17, 18, 19, 20, 21, 22, 23]
+    bins = []
+    for h in range(0,24):
+        for q in range(0, 60/BINSIZE):
+            # format time
+            bins.append(str(h).zfill(2)+':'+str(q*BINSIZE).zfill(2))
 
     # get raw data, initialize the data field and populate the 'data' structure
     rows = get_raw_data()
-    data = init_data()
+    data = init_data(BINSIZE)
 
-    print('Calculating the average light intensity per hour... ')
+    print('Calculating the average light intensity per {} minutes... '.format(BINSIZE))
 
     for row in rows:
         date = time.localtime(row[1])
         # filter out every light value below the threshold (e.g. sunlight)
         if row[2] >= THRESHOLD:
-            data[date[6]][date[3]][date[4]].append(row[2])
+            data[date[6]][date[3]][bin_by_minutes(date[4], BINSIZE)].append(row[2])
+
         else:
-            data[date[6]][date[3]][date[4]].append(0)
+            data[date[6]][date[3]][bin_by_minutes(date[4], BINSIZE)].append(0)
 
     # calculate the average per hour light levels
     avg_per_m_data = {
         day_k: {
             hour_k: {
-                min_k: sum(min_v) / len(min_v)
+                min_k: (sum(min_v) / len(min_v)) if len(min_v)>0 else 0
                 for min_k, min_v in hour_v.items()
             }
             for hour_k, hour_v in day_v.items()
@@ -94,16 +121,17 @@ def main(args):
 
     # fill the stats in the plot-data list
     plot_data = []
-    for day_id in avg_per_h_data:
+    for day_id in avg_per_m_data:
         vals = []
         for i in range(0, 24):
-            vals.append(avg_per_h_data[day_id][i])
+            for j in range(0, 60/BINSIZE):
+                vals.append(avg_per_m_data[day_id][i][j])
         plot_data.append(vals)
 
     print('DONE!')
 
     # generate the punchcard
-    punchcard(IMGPATH, plot_data, days, hours)
+    punchcard(IMGPATH, plot_data, days, bins)
     print('Job finished. You can find the image at {}'.format(IMGPATH))
 
 
