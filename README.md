@@ -31,7 +31,7 @@ $ python buerostats.py [output path] [bin size]
 ```
 This will generate a **punchcard.png** file inside the repository as output with hourly binning.
 
-Optionally, you can define a custom output path as argument and a custom bin size in minutes which must be a factor of 60.
+Optionally, you can define a custom output path as argument and a custom bin size in minutes which must be a factor of 60 and larger than 1, otherwise the output file would be too large.
 
 
 ## Something fishy? Found a bug?

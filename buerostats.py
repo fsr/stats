@@ -74,6 +74,9 @@ def main(args):
     if(60 % BINSIZE != 0):
         print('Bin size must be factor of 60.')
         quit()
+    if(BINSIZE < 2):
+        print('Output file would be too large, setting minimum bin size of 2 minutes.')
+        BINSIZE = 2
 
     # days and hours:minutes for the punchcard labels
     days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
